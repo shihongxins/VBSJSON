@@ -1,0 +1,80 @@
+[
+    {
+        "alert": {
+            "title": "Cat Color: ",
+            "message": [
+                {
+                    "set": {
+                        "name": "snowycolor",
+                        "value": {
+                            "input": {
+                                "title":"Snowy the the cats' color",
+                                "prompt":"What's Snowy's color:",
+                                "default": "White"
+                            }
+                        }
+                    }
+                },
+                {
+                    "set": {
+                        "name": "snowycolor",
+                        "value": {
+                            "if": {
+                                "value1": {
+                                    "get": {
+                                        "name": "snowycolor"
+                                    }
+                                },
+                                "value2": "White",
+                                "type": "eq",
+                                "true": "Whiter than Snow",
+                                "false": {
+                                    "get": {
+                                        "name": "snowycolor"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "switch": {
+                        "case": {
+                            "input": {
+                                "title": "Please Enter a cat name",
+                                "prompt": "Cat Name (Sly, Ebony, Karma, Snowy):",
+                                "default": "Snowy"
+                            }
+                        },
+                        "default": "Unknown Color",
+                        "items": [
+                            {
+                                "case": "Sly",
+                                "return": "Gray"
+                            },
+                            {
+                                "case": "Ebony",
+                                "return": "Black"
+                            },
+                            {
+                                "case": "Karma",
+                                "return": "Ginger"
+                            },
+                            {
+                                "case": "Snowy",
+                                "return": [" Snowy's Color is: ",
+                                    {
+                                        "get": {
+                                            "name": "snowycolor",
+                                            "default": "None Given"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    },"The Program Ran 'OK'"
+]
