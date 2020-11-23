@@ -2,15 +2,11 @@
 ' Author: shihongxins
 ' Date: 2020-11-21
 ' GitHub: https://github.com/shihongxins
-' LICENSE: MIT License https://github.com/shihongxins/vbsJSON/blob/main/LICENSE
+' LICENSE: MIT License https://github.com/shihongxins/VBSJSON/blob/main/LICENSE
 ' 
-
-'严格模式：类似与 js 中的 "use strict"
 Option Explicit
-Class vbsJSON
-    '空白符,数字格式正则
+Class VBSJSON
     Private WhiteSpace, NumberRegExp
-    '错误信息
     Private ParserError
 
     Private Function ClearParserError()
@@ -28,9 +24,8 @@ Class vbsJSON
 
     Private Sub Class_Initialize
         Call ClearParserError
-
         Whitespace = " " & vbTab & vbCr & vbLf
-        
+
         Set NumberRegExp = New RegExp
         NumberRegExp.Pattern = "^([\+\-\.]?(0|[1-9]\d*))(\.\d+)?([Ee\+\-\.\d+])?$"
         NumberRegExp.Global = False
@@ -43,28 +38,18 @@ Class vbsJSON
         For i=1 To Len(str)
             uChrCode = AscW(Mid(str,i,1))
             Select Case uChrCode
-                'BackSpace 退格
                 Case 8      uChr = "\b"
-                'Tab 缩进
                 Case 9      uChr = "\t"
-                'Linefeed 换行
                 Case 10     uChr = "\n"
-                'Formfeed 分页
                 Case 12     uChr = "\f"
-                'Carriage Return 回车
                 Case 13     uChr = "\r"
-                'Quotation mark 双引号
                 Case 34     uChr = "\"""
-                'Single quotation mark 单引号
                 Case 39     uChr = "\'"
-                'Reverse solidus 反斜杠转义符
                 Case 92     uChr = "\\"
                 Case Else
                     If uChrCode<32 Or uChrCode>127 Then
-                        'non-ascii 非ASCII码
                         uChr = "\u" & Right("0000" & Hex(uChrCode), 4)
                     Else
-                        '是ASCII码
                         uChr = ChrW(uChrCode)
                     End If
             End Select
@@ -81,31 +66,20 @@ Class vbsJSON
                 i = i + 1
                 uChr = Mid(str,i,1)
                 Select Case uChr
-                    'BackSpace 退格
                     Case "b"    uChr = ChrW(8)
-                    'Tab 缩进
                     Case "t"    uChr = ChrW(9)
-                    'Linefeed 换行
                     Case "n"    uChr = ChrW(10)
-                    'Formfeed 分页
                     Case "f"    uChr = ChrW(12)
-                    'Carriage Return 回车
                     Case "r"    uChr = ChrW(13)
-                    'Quotation mark 双引号
                     Case """"   uChr = ChrW(34)
-                    'Single quotation mark 单引号
                     Case "'"    uChr = ChrW(39)
-                    'Solidus 斜杠
                     Case "/"    uChr = ChrW(47)
-                    'Reverse solidus 反斜杠转义符
                     Case "\"    uChr = ChrW(92)
                     Case "u"
-                        ' Unicode 完整（包括最后的）
                         If i+4 <=Len(str) Then
                             uChr = ChrW("&H" & Mid(str,i + 1,4))
                             i = i + 4
                         Else
-                            '补回前面的 '\'
                             uChr = "\" & uChr
                         End If
                 End Select
@@ -115,7 +89,6 @@ Class vbsJSON
         DecodeUnicode = uStr
     End Function
 
-    'Skip to the next non-blank character
     Private Function skipWhiteSpace(ByRef str,ByRef index)
         Do While index>0 And index<=Len(str)
             If InStr(WhiteSpace,Mid(str,index,1))>0 Then
@@ -174,18 +147,14 @@ Class vbsJSON
                 Else
                     Call SetParserError("None dictionary in object!")
                 End If
-            'default: 都没有匹配到，默认执行
             Case Else
-                '先转为字符串类型，在转为 unicode
                 buf.Add buf.Count, """" & EncodeUnicode(CStr(obj)) & """"
         End Select
-        '将执行完后的结果集对象，取其每项的值为数组，然后通过JOIN方法转换为字符串，并返回
         stringify = Join(buf.Items, "")
     End Function
 
     Public Function parse(ByRef str)
         Call ClearParserError
-        '先是类型判断
         Select Case VarType(str)
             Case vbNull
                 parse = Null
@@ -197,18 +166,14 @@ Class vbsJSON
                 parse = str
                 Exit Function
             Case vbString
-                '字符串格式，退出类型判断，开始解析
             Case Else
-                '其他类型报错
                 Call SetParserError("Uncaught SyntaxError: Invalid JSON input,Unknown Type")
         End Select
 
         str = CStr(str)
-        '空字符串报错
         If Trim(str)="" Then
             Call SetParserError("Uncaught SyntaxError: Unexpected end of JSON input,Empty String")
         End If
-        '开始解析，按不同大类型分类解析，并返回结果
         Dim FirstChar
         FirstChar = Mid(str,skipWhiteSpace(str,1),1)
         If FirstChar="{" Then
@@ -228,8 +193,6 @@ Class vbsJSON
             Case Else
                 parseInit = parseBase(str,index)
         End Select
-        'any character except whitespace after select parse done,will throw error
-        'like "[1,2,3]  e  " ,will throw error at 'e'
         index = index + 1
         index = skipWhiteSpace(str,index)
         If index <= Len(str) And Mid(str,index,1)<>"" Then
@@ -249,7 +212,6 @@ Class vbsJSON
                 If InStr("-0123456789.", Char) Then
                     parseBase = parseNumber(str,index)
                 Else
-                    'unknown base type
                     Call SetParserError("Uncaught SyntaxError: Unexpected token " & Char & " in JSON at position " & CStr(index))
                 End If
         End Select
@@ -282,7 +244,6 @@ Class vbsJSON
             Call SetParserError("Invalid Object at position " & index & " : " & Mid(str, index) & vbCrLf)
         End If
 
-        ' Char="{" start parse Key
         Dim obj:Set obj = CreateObject("Scripting.Dictionary")
         KeyEndFlag = True
         Do
@@ -291,28 +252,19 @@ Class vbsJSON
                 Call SetParserError("Uncaught SyntaxError: Unexpected end of JSON input,Missing '}'")
             End If
             If KeyEndFlag=True Then
-                'skip whitespace before each key
                 index = skipWhiteSpace(str,index)
                 Char = Mid(str,index,1)
-                'start read property key
                 If Char="""" Or Char="'" Then
                     Quote = Char
                     KeyEndFlag = False
-                'continue read next property
                 ElseIf Char="," Then
-                    'throw error like '{,}' and '{,"a":1}' and '{"a":1,,"c":3}'
                     If VarType(Value)=vbEmpty Then
                         Call SetParserError("Uncaught SyntaxError: Unexpected token " & Char & " in JSON at position " & CStr(index))
-                    'continue read next property
                     Else
-                        'clear last Key and Value
                         Key = ""
                         Value = Empty
                     End If
-                'object property done
                 ElseIf Char="}" Then
-                    'skip "}"
-                    'index = index + 1
                     Exit DO
                 Else
                     Call SetParserError("Uncaught SyntaxError: Unexpected token " & Char & " in JSON at position " & CStr(index))
@@ -321,18 +273,14 @@ Class vbsJSON
                 Char = Mid(str,index,1)
                 If Char<>Quote Then
                     Key = Key + Char
-                'stop read property key
                 ElseIf Char=Quote Then
                     KeyEndFlag = True
                     index = index + 1
-                    'skip whitespace before each ":"
                     index = skipWhiteSpace(str,index)
                     Char = Mid(str,index,1)
                     If Char=":" Then
                         index = index + 1
-                        'skip whitespace after each ":"
                         index = skipWhiteSpace(str,index)
-                        '判断 Value 类型
                         Dim FirstChar
                         FirstChar = Mid(str,index,1)
                         If FirstChar="{" Then
@@ -340,11 +288,8 @@ Class vbsJSON
                         Else
                             Value = parseValue(str,index)
                         End If
-                        'read Key and Value done,Add to dictionary
                         Key = DecodeUnicode(Key)
                         If obj.Exists(Key) Then
-                            '有可能Key 重复且 Value 是对象，不能简单的用赋值，应该先移除再添加
-                            'obj.Item(Key) = Value
                             obj.Remove(Key)
                         End If
                         obj.Add Key, Value
@@ -365,12 +310,9 @@ Class vbsJSON
             Call SetParserError("Invalid Array at position " & index & " : " & Mid(str, index) & vbCrLf)
         End If
 
-        ' Char="[" start parse
         Dim obj:Set obj = CreateObject("Scripting.Dictionary")
-        'skip "["
         index = index + 1
         Do
-            'clear all whitespace before every ',' delimiter
             If VarType(Value)=vbEmpty Then
                 index = skipWhiteSpace(str,index)
             End If
@@ -379,20 +321,14 @@ Class vbsJSON
             End If
             Char = Mid(str,index,1)
             If Char="," Then
-                'throw error like "[,]" and "[,1]" and "[1,,3]"
                 If VarType(Value)=vbEmpty Then
                     Call SetParserError("Uncaught SyntaxError: Unexpected token " & Char & " in JSON at position " & CStr(index))
-                'continue read next property
                 Else
-                    'clear last Value
                     Value = Empty
                 End If
             ElseIf Char="]" Then
-                'skip "]"
-                'index = index + 1
                 Exit Do
             Else
-                '判断 Value 类型
                 Dim FirstChar
                 FirstChar = Mid(str,index,1)
                 If FirstChar="{" Then
@@ -410,10 +346,8 @@ Class vbsJSON
         parseArray = obj.Items
     End Function
 
-    'parse object / array / null / true / false / string / number
     Private Function parseValue(ByRef str,ByRef index)
         Dim Char
-        'maybe doesn't need next line
         index = skipWhiteSpace(str,index)
         Char = Mid(str,index,1)
         Select Case Char
@@ -431,17 +365,14 @@ Class vbsJSON
                 If InStr("-0123456789.", Char) Then
                     parseValue = parseNumber(str,index)
                 Else
-                    'unknown type
                     Call SetParserError("Uncaught SyntaxError: Unexpected token " & Char & " in JSON at position " & CStr(index))
                 End If
         End Select
     End Function
 
-    'parse null
     Private Function parseNull(ByRef str, ByRef index)
         If index+4 <= Len(str) And Mid(str,index,4) = "null" Then
             parseNull = Null
-            'reset index to last char 'l'
             index = index + 3
         Else
             Dim Char
@@ -458,15 +389,12 @@ Class vbsJSON
         End If
     End Function
 
-    'parse true / false
     Private Function parseBoolean(ByRef str, ByRef index)
         If index+5 <= Len(str) And Mid(str,index,5) = "false" Then
             parseBoolean = False
-            'reset index to last char 'e'
             index = index + 4
         ElseIf index+4 <= Len(str) And Mid(str,index,4) = "true" Then
             parseBoolean = True
-            'reset index to last char 'e'
             index = index + 3
         Else
             Dim Char
@@ -489,14 +417,11 @@ Class vbsJSON
         End If
     End Function
 
-    'parse string
     Private Function parseString(ByRef str, ByRef index)
         Dim Quote, Char, String
-        'Start match, get the opening(left) quotation mark
         Quote = Mid(str,index,1)
         Do While index <= Len(str)
             index = index + 1
-            'Until the last character, the match is not over yet
             If index > Len(str) Then
                 Call SetParserError("Uncaught SyntaxError: Unexpected end of JSON input, missing '" & Quote & "'")
             End If
@@ -507,9 +432,6 @@ Class vbsJSON
                 If Mid(str,index-1,1)="\" Then
                     String = String & Char
                 Else
-                    'End match, skip the closing(right) quotation mark
-                    'fixed:not need, beacause the index will change in Do...Loop at parseObject/parseArray
-                    'index = index + 1
                     Exit Do
                 End If
             End If
@@ -517,18 +439,13 @@ Class vbsJSON
         parseString = DecodeUnicode(String)
     End Function
 
-    'parse number
     Private Function parseNumber(ByRef str, ByRef index)
         Dim Char, NumberStr
         Do While index <= Len(str)
             Char = Mid(str,index,1)
             If InStr("+-0123456789.eE", Char) Then
                 NumberStr = NumberStr & Char
-            'untill last char,parseString() still run
-            'ElseIf index = Len(str) Then
-            '    Call SetParserError("Uncaught SyntaxError: Unexpected end of JSON input")
             Else
-                'reset index to last number char
                 index = index - 1
                 Exit Do
             End If

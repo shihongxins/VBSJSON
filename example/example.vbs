@@ -7,7 +7,7 @@ Sub Import(filename)
     ExecuteGlobal strCode
 End Sub
 
-Import "../release/vbsJSON.vbs"
+Import "../release/VBSJSON.vbs"
 
 Dim FSO
 Set FSO = CreateObject("Scripting.FileSystemObject")
@@ -16,7 +16,7 @@ source1 = FSO.OpenTextFile("source1.json").ReadAll
 source2 = FSO.OpenTextFile("source2.json").ReadAll
 
 Dim JSON
-Set JSON = new vbsJSON
+Set JSON = new VBSJSON
 
 Dim source1_parse, source2_parse
 Set source1_parse = JSON.parse(source1)
@@ -25,3 +25,5 @@ source2_parse = JSON.parse(source2)
 Dim source1_parse_stringify, source2_parse_stringify
 source1_parse_stringify = JSON.stringify(source1_parse)
 source2_parse_stringify = JSON.stringify(source2_parse)
+
+MsgBox "Success!"
